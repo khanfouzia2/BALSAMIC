@@ -1,0 +1,23 @@
+{
+    "__default__": {
+        "account": "cust003",
+        "name": "cancer.{rule}.{wildcards}",
+        "time": "12:00:00",
+        "n": 6,
+        "mail_type": "FAIL",
+        "mail_user": "hassan.foroughi@scilifelab.se",
+        "partition": "core"
+    },
+    "all": {
+        "mail_type": "END",
+        "mail_user": "hassan.foroughi@scilifelab.se",
+        "time": "00:15:00",
+        "n": 1
+    },
+    "vardict_paired": {
+        "time": "24:00:00"
+    },
+    "mutect2_somatic": {
+        "time": "24:00:00"
+    }
+}

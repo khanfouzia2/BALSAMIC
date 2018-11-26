@@ -3,21 +3,21 @@
 
 __author__ = "Hassan Foroughi Asl"
 
-from BALSAMIC.tools import get_result_dir
+from BALSAMIC.tools import get_result_dir, get_conda_env, get_picard_mrkdup
 
 bam_dir = get_result_dir(config) + "/bam/"
-
+picarddup = get_picard_mrkdup(config)
 result_dir = get_result_dir(config) + "/"
 
-rule GATK_RealignerTargetCreator:
+rule RealignerTargetCreator:
   input:
-    bam = bam_dir + "{sample}" + ".sorted.rmdup.bam",
+    bam = bam_dir + "{sample}" + ".sorted." + picarddup + ".bam",
     fa = config["path"]["genomefa"] + config["references"]["genomefa"],
     knownsites = config["path"]["genomefa"] + config["references"]["dbsnp"], 
   output:
-    bam_dir + "{sample}.sorted.rmdup.intervals",
+    bam_dir + "{sample}.sorted." + picarddup + ".intervals",
   params:
-    conda = config["condaenvs"]["cancer_core_addition_python36"],
+    conda = get_conda_env(config["conda_env_yaml"],"gatk"),
   shell:
     "source activate {params.conda}; "
     "gatk "
@@ -28,16 +28,16 @@ rule GATK_RealignerTargetCreator:
         "--out {output}; "
     "source deactivate; "
 
-rule GATK_IndelRealigner:
+rule IndelRealigner:
   input:
-    bam = bam_dir + "{sample}" + ".sorted.rmdup.bam",
+    bam = bam_dir + "{sample}" + ".sorted." + picarddup + ".bam",
     fa = config["path"]["genomefa"] + config["references"]["genomefa"],
     knownsites = config["path"]["genomefa"] + config["references"]["dbsnp"], 
-    intervals = bam_dir + "{sample}" + ".sorted.rmdup.intervals",
+    intervals = bam_dir + "{sample}" + ".sorted." + picarddup + ".intervals",
   output:
-    bam_dir + "{sample}.sorted.rmdup.ralgn.bam",
+    bam_dir + "{sample}.sorted." + picarddup + ".ralgn.bam",
   params:
-    conda = config["condaenvs"]["cancer_core_addition_python36"],
+    conda = get_conda_env(config["conda_env_yaml"],"gatk"),
   shell:
     "source activate {params.conda}; "
     "gatk "
@@ -49,15 +49,15 @@ rule GATK_IndelRealigner:
         "--out {output}; "
     "source deactivate; "
 
-rule GATK_baserecalibrator:
+rule BaseRecalibrator:
   input:
-    bam = bam_dir + "{sample}" + ".sorted.rmdup.ralgn.bam",
+    bam = bam_dir + "{sample}" + ".sorted." + picarddup + ".ralgn.bam",
     fa = config["path"]["genomefa"] + config["references"]["genomefa"],
     knownsites = config["path"]["genomefa"] + config["references"]["dbsnp"], 
   output:
-    bam_dir + "{sample}.sorted.rmdup.ralgn.bsrcl.bam",
+    bam_dir + "{sample}.sorted." + picarddup + ".ralgn.bsrcl.bam",
   params:
-    conda = config["condaenvs"]["cancer_core_addition_python36"],
+    conda = get_conda_env(config["conda_env_yaml"],"gatk"),
   shell:
     "source activate {params.conda}; "
     "gatk "
@@ -73,13 +73,14 @@ rule GATK_baserecalibrator:
         "--out {output}; "
     "samtools index {input.bam}; "
     "source deactivate; "
-rule GATK_prepare_popvcf:
+
+rule PreparePopVCF:
   input:
     ref1kg = config["path"]["genomefa"] + config["references"]["1000G"], 
   output:
     popvcf = result_dir + "popvcf.vcf"
   params:
-    conda = config["condaenvs"]["cancer_core"],
+    conda = get_conda_env(config["conda_env_yaml"],"bcftools"),
     anno_str1 = "FORMAT/GT,FORMAT/GL,FORMAT/DS,^INFO/AC,^INFO/AF,^INFO/AN,^INFO/",
     popcode = "EUR"
   shell:
@@ -108,37 +109,3 @@ rule GATK_prepare_popvcf:
         "print; }}' > {output.popvcf}; "
     "source deactivate; "
 
-rule GATK_contest:
-  input:
-    bamN = bam_dir + "normal.merged.bam",
-    bamT = bam_dir + "tumor.merged.bam",
-    fa = config["path"]["genomefa"] + config["references"]["genomefa"],
-    popvcf = result_dir + "popvcf.vcf", 
-  output:
-    N_vs_T = bam_dir + "normal_tumor.contest", 
-    T_vs_N = bam_dir + "tumor_normal.contest", 
-  params:
-    conda = config["condaenvs"]["cancer_core_addition_python36"],
-    min_genotype_ratio="0.95",
-    popcode = "EUR"
-  shell:
-    "source activate {params.conda}; "
-    "gatk "
-        "-T ContEst "
-        "-R {input.fa} "
-        "-I:eval {input.bamN} "
-        "-I:genotype {input.bamT} "
-        "--popfile {input.popvcf} "
-        "--population {params.popcode} "
-        "--min_genotype_ratio {params.min_genotype_ratio} "
-        "-o {output.N_vs_T}; " 
-    "gatk "
-        "-T ContEst "
-        "-R {input.fa} "
-        "-I:eval {input.bamT} "
-        "-I:genotype {input.bamN} "
-        "--popfile {input.popvcf} "
-        "--population {params.popcode} "
-        "--min_genotype_ratio {params.min_genotype_ratio} "
-        "-o {output.T_vs_N}; " 
-    "source deactivate; "

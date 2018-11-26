@@ -1,0 +1,40 @@
+{
+    "QC": {
+        "picard_rmdup": "False",
+        "adapter":
+        "AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCT",
+        "min_seq_length": "25"
+    },
+    "vcf": {
+        "manta": {
+            "default": [
+                "tumorSV.vcf.gz", "candidateSV.vcf.gz",
+                "candidateSmallIndels.vcf.gz"
+            ],
+            "merged":
+            "manta.vcf.gz",
+            "type":
+            "SV"
+        },
+        "manta_germline": {
+              "default": ["diploidSV.vcf.gz", "candidateSV.vcf.gz", "candidateSmallIndels.vcf.gz" ],
+              "merged": "manta_germline.vcf.gz",
+              "type": "SV"
+        }, 
+        "strelka_germline": {
+            "default": ["variants.vcf.gz", "germline.S1.vcf.gz"],
+            "merged": "strelka_germline.vcf.gz",
+            "type": "SNV"
+        },
+        "mutect": {
+            "default": "mutect.vcf.gz",
+            "merged": "mutect.vcf.gz",
+            "type": "SNV"
+        },
+        "vardict": {
+            "default": "vardict.vcf.gz",
+            "merged": "vardict.vcf.gz",
+            "type": "SNV"
+        }
+    }
+}
