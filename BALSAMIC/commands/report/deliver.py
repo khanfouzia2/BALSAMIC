@@ -33,8 +33,9 @@ LOG = logging.getLogger(__name__)
     required=True,
     help="Sample config file. Output of balsamic config sample",
 )
+@click.option("--report",is_flag=True,default=False,help="If set, create an html report in the analysis directory")
 @click.pass_context
-def deliver(context, sample_config):
+def deliver(context, sample_config, report):
     """
     cli for deliver sub-command.
     Writes <case_id>.hk in result_directory.
@@ -55,19 +56,6 @@ def deliver(context, sample_config):
     analysis_type = sample_config_dict["analysis"]["analysis_type"]
     sequencing_type = sample_config_dict["analysis"]["sequencing_type"]
     snakefile = get_snakefile(analysis_type, sequencing_type)
-
-    LOG.info("Creating report file")
-    report_file_name = os.path.join(
-        yaml_write_directory, sample_config_dict["analysis"]["case_id"] + "_report.html"
-    )
-    with CaptureStdout():
-        snakemake.snakemake(
-            snakefile=snakefile,
-            dryrun=True,
-            quiet=True,
-            report=report_file_name,
-            configfiles=[sample_config],
-        )
 
     with CaptureStdout():
         snakemake.snakemake(
@@ -167,16 +155,32 @@ def deliver(context, sample_config):
 
             delivery_json["files"].append(interm_dict)
 
-    delivery_json["files"].append(
-        {
-            "path": report_file_name,
-            "date": datetime.date.today().isoformat(),
-            "step": "balsamic_delivery",
-            "format": ".html",
-            "tag": "report",
-            "id": sample_config_dict["analysis"]["case_id"],
-        }
-    )
+    if report:
+        LOG.info("Creating report file")
+        report_file_name = os.path.join(
+            yaml_write_directory, sample_config_dict["analysis"]["case_id"] + "_report.html"
+        )
+        with CaptureStdout():
+            snakemake.snakemake(
+                snakefile=snakefile,
+                dryrun=True,
+                quiet=True,
+                report=report_file_name,
+                configfiles=[sample_config],
+            )
+
+
+        delivery_json["files"].append(
+            {
+                "path": report_file_name,
+                "date": datetime.date.today().isoformat(),
+                "step": "balsamic_delivery",
+                "format": ".html",
+                "tag": "report",
+                "id": sample_config_dict["analysis"]["case_id"],
+            }
+        )
+
     write_json(delivery_json, delivery_file_name)
     with open(delivery_file_name + ".yaml", "w") as fn:
         yaml.dump(delivery_json, fn, default_flow_style=False)
