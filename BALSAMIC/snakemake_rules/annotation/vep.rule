@@ -10,13 +10,14 @@ vep_output = {}
 # For sake of backward compatibility check for entry_point key
 if "entry_point" in config:
     if config["entry_point"] == "FastQ":
-        vep_input["vcf"] = vcf_dir + "{var_type}.somatic.{case_name}.{var_caller}.vcf.gz"
-        vep_input["header"] = vcf_dir + "{var_type}.somatic.{case_name}.{var_caller}.sample_name_map"
-        vep_output["vcf_all"] = vep_dir + "{var_type}.somatic.{case_name}.{var_caller}.all.vcf.gz"
-        vep_output["vcf_summary"] = vep_dir + "{var_type}.somatic.{case_name}.{var_caller}.all.vcf.gz_summary.html"
-        vep_output["vcf_pass"] = vep_dir + "{var_type}.somatic.{case_name}.{var_caller}.pass.vcf.gz"
-        tmpvcf = vep_dir + "{var_type}.somatic.{case_name}.{var_caller}.tmp.vcf.gz"
-        benchmark_file = benchmark_dir + 'vep_' + "{var_type}.somatic.{case_name}.{var_caller}.vep.tsv"
+        somatic_vcf_pattern = "{var_type}.somatic.{case_name}.{var_caller}"
+        vep_input["vcf"] = vcf_dir + somatic_vcf_pattern + ".vcf.gz"
+        vep_input["header"] = vcf_dir + somatic_vcf_pattern + ".sample_name_map"
+        vep_output["vcf_all"] = vep_dir + somatic_vcf_pattern + ".all.vcf.gz"
+        vep_output["vcf_summary"] = vep_dir + somatic_vcf_pattern + ".all.vcf.gz_summary.html"
+        vep_output["vcf_pass"] = vep_dir + somatic_vcf_pattern + ".pass.vcf.gz"
+        tmpvcf = vep_dir + somatic_vcf_pattern + ".tmp.vcf.gz"
+        benchmark_file = benchmark_dir + 'vep_' + somatic_vcf_pattern + ".vep.tsv"
     if config["entry_point"] == "VCF":
         vep_input["vcf"] = vcf_dir + get_entry_point_input("VCF")
         vep_input["header"] = vcf_dir + get_entry_point_input("VCF")
