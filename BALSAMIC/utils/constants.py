@@ -490,4 +490,5 @@ BIOINFO_TOOL_ENV = {
     "strelka": "varcall_py27",
     "manta": "varcall_py27",
     "cnvkit": "varcall_cnvkit",
+    "genmod": "annotate",
 }
